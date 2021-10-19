@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<!--
+    Karaf commands:
+    
+feature:repo-add mvn:project5/distribution/${project.version}/xml/features
+feature:install 1111/${project.version}
+-->
+
+<features name="1111-features-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
+
+    <feature version="${project.version}" name="1111">
+        <feature version="${jasypt.encryption.version}">jasypt-encryption</feature>   
+        <feature version="${camel.version}">camel-jasypt</feature>  
+        <feature version="${camel.version}">camel-cxf</feature>
+        <feature version="${camel.version}">camel-http</feature>
+        <feature version="${camel.version}">camel-http4</feature> 
+        <feature version="${camel.version}">camel-jackson</feature>    
+        <bundle>mvn:com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/${jackson.jaxrs.version}</bundle>           
+        <bundle>mvn:com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/${jackson.jaxrs.version}</bundle>             
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson.jaxrs.version}</bundle>  
+        <bundle>mvn:es.apba.infra.esb.support/apba-support-camel/1.0.1</bundle>  
+        <bundle>mvn:es.apba.infra.esb.support/apba-support-cxf/1.0.0</bundle>  
+        <bundle>mvn:project5/api/${project.version}</bundle>   
+        <bundle>mvn:project5/11112esb/${project.version}</bundle> 
+        <bundle>mvn:project5/esb21111-consumers/${project.version}</bundle>    
+        <bundle>mvn:project5/esb21111-proxyservices/${project.version}</bundle>    
+    </feature>
+    
+</features>
+
+

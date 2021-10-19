@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:camel="http://camel.apache.org/schema/blueprint"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.2.0"
+           xmlns:enc="http://karaf.apache.org/xmlns/jasypt/v1.0.0"
+           xsi:schemaLocation="
+            http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+            http://camel.apache.org/schema/blueprint  http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.2.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.2.0.xsd">
+
+    <!-- Config properties -->
+    <cm:property-placeholder id="cfgprops" persistent-id="project5.esb2test3.consumers" update-strategy="reload"/>
+
+    <bean id="cfgpropsencryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
+        <property name="config">
+            <bean class="org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig">
+                <property name="algorithm" value="PBEWithMD5AndDES" />
+                <property name="passwordEnvName" value="APBA_JASYPT_ENCRYPTION_PASSWORD" />
+            </bean>
+        </property>        
+    </bean>
+    
+    <enc:property-placeholder encryptor-ref="cfgpropsencryptor"/>
+    
+    <bean id="jasyptPropertiesParser" class="org.apache.camel.component.jasypt.JasyptPropertiesParser">
+        <property name="encryptor" ref="cfgpropsencryptor"/>
+    </bean>
+    
+    <!-- ActiveMQ parameterized component -->
+    <bean id="activemqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="${activemq.brokerURL}"/>
+        <property name="userName" value="${activemq.username}"/>
+        <property name="password" value="${activemq.password}"/>
+    </bean>
+ 
+    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="connectionFactory" ref="activemqConnectionFactory"/>
+    </bean>  
+    
+    <!-- Redelivery policy for the dead letter pattern implementation -->    
+    <bean id="redeliveryPolicy" class="es.apba.infra.esb.support.camel.processor.ConsumerRedeliveryPolicy">
+        <argument value="${connectException.maximumRedeliveries}"/>  
+        <argument value="${otherException.maximumRedeliveries}"/>
+        <argument value="${onException.redeliveryDelayMiliseconds}"/>
+    </bean>
+    
+    <!-- Integration routes -->
+    <camelContext id="CtxEsb21111Consumers" xmlns="http://camel.apache.org/schema/blueprint">      
+        <propertyPlaceholder location="blueprint:cfgprops" propertiesParserRef="jasyptPropertiesParser"/>                
+        
+        <route id="RtTrackEventConsume"> 
+            <from uri="activemq:topic:apba.topic.aisstation.trackevent?clientId=1111&amp;durableSubscriptionName=1111"/>
+            <to uri="direct:TrackEventConsume"/>
+        </route>
+        
+        <route id="RtTrackEventConsumingProcess">       
+            <from uri="direct:TrackEventConsume"/> 
+            <log loggingLevel="INFO" message="${camelId} - ${routeId} - ${exchangeId} | Consuming message ... | IN | apbaTransactionId: ${header.apbaTransactionId}"/>
+                    
+            <!-- Dead letter pattern custom implementation -->       
+            <onException redeliveryPolicyRef="redeliveryPolicy">
+                <exception>java.net.ConnectException</exception>
+                <handled>
+                    <constant>true</constant>
+                </handled>
+                <log loggingLevel="ERROR" message="${camelId} - ${routeId} - ${exchangeId} | Connect exception | ERROR | apbaTransactionId: ${header.apbaTransactionId}"/>                                     
+                <to uri="activemq:queue:DLQ.apba.queue.1111.trackevent"/>
+                <log loggingLevel="INFO" message="${camelId} - ${routeId} - ${exchangeId} | Message sent to DLQ | OUT | apbaTransactionId: ${header.apbaTransactionId}"/>
+            </onException>
+            
+            <onException redeliveryPolicyRef="redeliveryPolicy">
+                <exception>java.lang.Exception</exception>
+                <handled>
+                    <constant>true</constant>
+                </handled>
+                <log loggingLevel="ERROR" message="${camelId} - ${routeId} - ${exchangeId} | Exception detected | ERROR | apbaTransactionId: ${header.apbaTransactionId} | ${exception.message}"/>
+                <to uri="activemq:queue:DLQ.apba.queue.1111.trackevent"/>   
+                <log loggingLevel="INFO" message="${camelId} - ${routeId} - ${exchangeId} | Message sent to DLQ | OUT | apbaTransactionId: ${header.apbaTransactionId}"/>                     
+            </onException>
+            
+            <setHeader headerName="Exchange.HTTP_METHOD">
+                <constant>POST</constant>
+            </setHeader>
+            <setHeader headerName="Exchange.CONTENT_TYPE">
+                <constant>application/json</constant>
+            </setHeader> 
+            <removeHeaders pattern="Authorization"/>
+            
+            <to uri="{{1111DestinationEndpoint.TrackEvent.URL}}?bridgeEndpoint=true&amp;authenticationPreemptive=true&amp;authMethod=Basic&amp;authUsername={{1111DestinationEndpoint.username}}&amp;authPassword={{1111DestinationEndpoint.password}}"/>            
+            <log loggingLevel="INFO" message="${camelId} - ${routeId} - ${exchangeId} | Message consumed | OUT | apbaTransactionId: ${header.apbaTransactionId} | remoteEndpointHttpResponseCode: ${header[CamelHttpResponseCode]}"/>
+        </route>  
+        
+        <!-- DLQ processing routes available for administrators-->
+        <route id="RtTrackEventPurgeDLQ" autoStartup="false">
+            <from uri="activemq:queue:DLQ.apba.queue.1111.trackevent"/>
+            <log loggingLevel="WARN" message="${camelId} - ${routeId} - ${exchangeId} | Message purged | OUT | apbaTransactionId: ${header.apbaTransactionId} | ${body}"/>              
+        </route>  
+        
+        <route id="RtTrackEventProcessDLQ" autoStartup="false">
+            <from uri="activemq:queue:DLQ.apba.queue.1111.trackevent"/>
+            <log loggingLevel="WARN" message="${camelId} - ${routeId} - ${exchangeId} | Message re-injeted on consumer | PROCESS | apbaTransactionId: ${header.apbaTransactionId}"/>
+            <to uri="direct:TrackEventConsume"/>
+        </route>         
+        
+    </camelContext>
+
+</blueprint>
