@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>es.apba.infra.esb</groupId>
+        <artifactId>parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+    
+    <groupId>es.apba.infra.esb.1111</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    
+    <name>es.apba.infra.esb.1111:parent</name>
+    
+    <scm>
+        <connection>scm:git:https://alm.apba.es/bitbucket/scm/pcis/1111.git</connection>
+        <developerConnection>scm:git:https://alm.apba.es/bitbucket/scm/pcis/1111.git</developerConnection>
+    </scm>
+    
+    <distributionManagement>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>apps01.apba.local-snapshots</name>
+            <url>http://apps01.apba.local/artifactory/prov-snapshot-local</url>
+        </snapshotRepository>
+        <repository>
+            <id>central</id>
+            <name>apps01.apba.local-releases</name>
+            <url>http://apps01.apba.local/artifactory/prov-release-local</url>
+        </repository>        
+    </distributionManagement>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.7</version>
+                <extensions>true</extensions>
+                <configuration>      
+                    <skipStaging>true</skipStaging>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>  
+    </build>
+<modules>  <module>api</module>
+    <module>test32esb</module>
+    <module>esb2test3</module>
+    <module>distribution</module>
+  </modules>
+</project>
