@@ -120,3 +120,22 @@ git push https://github.com/Avinashchh26/Avinash.git master
 sudo git push https://github.com/Avinashchh26/Avinash.git master
 git log
 git push origin master
+git init
+git log
+git push origin HEAD:master
+git push -u origin master
+git status
+git add .
+git add.
+git add *
+git status
+git commit -m " new commit " 
+git log
+git push origin master
+git push -u  origin master
+git push -u  origin master.
+Avinashchh26
+git push -u  origin master
+ls
+cd Aviansh
+git config --list
