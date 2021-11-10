@@ -1,0 +1,12 @@
+# pack-refs with: peeled fully-peeled sorted 
+620980b7debe77b990a36edeabfa740e74aa403e refs/heads/main
+7ff132166aea230da3705fae6cc06731fb934ac3 refs/heads/master
+3a1155abbecfcbb0e6e36cde24518573d9626efa refs/heads/master1
+a3826d2ba0f734c2228410ca3b26d65567fe2eb2 refs/heads/sumanth
+620980b7debe77b990a36edeabfa740e74aa403e refs/pull/1/head
+5eabf31b89e62d1c2ec477bb643d8be8d96454da refs/pull/1/merge
+3a1155abbecfcbb0e6e36cde24518573d9626efa refs/pull/2/head
+2dad58c3f099659267ab6d32dd9e2e59ad74f889 refs/pull/2/merge
+a3826d2ba0f734c2228410ca3b26d65567fe2eb2 refs/pull/3/head
+effebca37677cb0f41df214ecc2de2c142404ce1 refs/pull/3/merge
+620980b7debe77b990a36edeabfa740e74aa403e refs/tags/avinash
